@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="board.css" />
+    <title>Chess Board</title>
+  </head>
+  <body style="background-color: gray">
+    <div class="board-container">
+      <div class="board">
+        <div class="rows">
+          <div class="light-square square" id="a8">
+            <img class="pieces" id="br1" src="icons/black-rook.svg" />
+          </div>
+          <div class="dark-square square" id="b8">
+            <img class="pieces" id="bn1" src="icons/black-knight.svg" />
+          </div>
+          <div class="light-square square" id="c8">
+            <img class="pieces" id="bb1" src="icons/black-bishop.svg" />
+          </div>
+          <div class="dark-square square" id="d8">
+            <img class="pieces" id="bq" src="icons/black-queen.svg" />
+          </div>
+          <div class="light-square square" id="e8">
+            <img class="pieces" id="bk" src="icons/black-king.svg" />
+          </div>
+          <div class="dark-square square" id="f8">
+            <img class="pieces" id="bb2" src="icons/black-bishop.svg" />
+          </div>
+          <div class="light-square square" id="g8">
+            <img class="pieces" id="bn2" src="icons/black-knight.svg" />
+          </div>
+          <div class="dark-square square" id="h8">
+            <div class="light-numbers numbers">8</div>
+            <img class="pieces" id="br2" src="icons/black-rook.svg" />
+          </div>
+        </div>
+        <div class="rows">
+          <div class="dark-square square" id="a7">
+            <img class="pieces" id="bp1" src="icons/black-pawn.svg" />
+          </div>
+          <div class="light-square square" id="b7">
+            <img class="pieces" id="bp2" src="icons/black-pawn.svg" />
+          </div>
+          <div class="dark-square square" id="c7">
+            <img class="pieces" id="bp3" src="icons/black-pawn.svg" />
+          </div>
+          <div class="light-square square" id="d7">
+            <img class="pieces" id="bp4" src="icons/black-pawn.svg" />
+          </div>
+          <div class="dark-square square" id="e7">
+            <img class="pieces" id="bp5" src="icons/black-pawn.svg" />
+          </div>
+          <div class="light-square square" id="f7">
+            <img class="pieces" id="bp6" src="icons/black-pawn.svg" />
+          </div>
+          <div class="dark-square square" id="g7">
+            <img class="pieces" id="bp7" src="icons/black-pawn.svg" />
+          </div>
+          <div class="light-square square" id="h7">
+            <div class="dark-numbers numbers">7</div>
+            <img class="pieces" id="bp8" src="icons/black-pawn.svg" />
+          </div>
+        </div>
+        <div class="rows">
+          <div class="light-square square" id="a6"></div>
+          <div class="dark-square square" id="b6"></div>
+          <div class="light-square square" id="c6"></div>
+          <div class="dark-square square" id="d6"></div>
+          <div class="light-square square" id="e6"></div>
+          <div class="dark-square square" id="f6"></div>
+          <div class="light-square square" id="g6"></div>
+          <div class="dark-square square" id="h6">
+            <div class="light-numbers numbers">6</div>
+          </div>
+        </div>
+        <div class="rows">
+          <div class="dark-square square" id="a5"></div>
+          <div class="light-square square" id="b5"></div>
+          <div class="dark-square square" id="c5"></div>
+          <div class="light-square square" id="d5"></div>
+          <div class="dark-square square" id="e5"></div>
+          <div class="light-square square" id="f5"></div>
+          <div class="dark-square square" id="g5"></div>
+          <div class="light-square square" id="h5">
+            <div class="dark-numbers numbers">5</div>
+          </div>
+        </div>
+        <div class="rows">
+          <div class="light-square square" id="a4"></div>
+          <div class="dark-square square" id="b4"></div>
+          <div class="light-square square" id="c4"></div>
+          <div class="dark-square square" id="d4"></div>
+          <div class="light-square square" id="e4"></div>
+          <div class="dark-square square" id="f4"></div>
+          <div class="light-square square" id="g4"></div>
+          <div class="dark-square square" id="h4">
+            <div class="light-numbers numbers">4</div>
+          </div>
+        </div>
+        <div class="rows">
+          <div class="dark-square square" id="a3"></div>
+          <div class="light-square square" id="b3"></div>
+          <div class="dark-square square" id="c3"></div>
+          <div class="light-square square" id="d3"></div>
+          <div class="dark-square square" id="e3"></div>
+          <div class="light-square square" id="f3"></div>
+          <div class="dark-square square" id="g3"></div>
+          <div class="light-square square" id="h3">
+            <div class="dark-numbers numbers">3</div>
+          </div>
+        </div>
+        <div class="rows">
+          <div class="light-square square" id="a2">
+            <img class="pieces" id="wp1" src="icons/white-pawn.svg" />
+          </div>
+          <div class="dark-square square" id="b2">
+            <img class="pieces" id="wp2" src="icons/white-pawn.svg" />
+          </div>
+          <div class="light-square square" id="c2">
+            <img class="pieces" id="wp3" src="icons/white-pawn.svg" />
+          </div>
+          <div class="dark-square square" id="d2">
+            <img class="pieces" id="wp4" src="icons/white-pawn.svg" />
+          </div>
+          <div class="light-square square" id="e2">
+            <img class="pieces" id="wp5" src="icons/white-pawn.svg" />
+          </div>
+          <div class="dark-square square" id="f2">
+            <img class="pieces" id="wp6" src="icons/white-pawn.svg" />
+          </div>
+          <div class="light-square square" id="g2">
+            <img class="pieces" id="wp7" src="icons/white-pawn.svg" />
+          </div>
+          <div class="dark-square square" id="h2">
+            <div class="light-numbers numbers">2</div>
+            <img class="pieces" id="wp8" src="icons/white-pawn.svg" />
+          </div>
+        </div>
+        <div class="rows">
+          <div class="dark-square square" id="a1">
+            <div class="light-letters letters">a</div>
+            <img class="pieces" id="wr1" src="icons/white-rook.svg" />
+          </div>
+          <div class="light-square square" id="b1">
+            <div class="dark-letters letters">b</div>
+            <img class="pieces" id="wn1" src="icons/white-knight.svg" />
+          </div>
+          <div class="dark-square square" id="c1">
+            <div class="light-letters letters">c</div>
+            <img class="pieces" id="wb1" src="icons/white-bishop.svg" />
+          </div>
+          <div class="light-square square" id="d1">
+            <div class="dark-letters letters">d</div>
+            <img class="pieces" id="wq" src="icons/white-queen.svg" />
+          </div>
+          <div class="dark-square square" id="e1">
+            <div class="light-letters letters">e</div>
+            <img class="pieces" id="wk" src="icons/white-king.svg" />
+          </div>
+          <div class="light-square square" id="f1">
+            <div class="dark-letters letters">f</div>
+            <img class="pieces" id="wb2" src="icons/white-bishop.svg" />
+          </div>
+          <div class="dark-square square" id="g1">
+            <div class="light-letters letters">g</div>
+            <img class="pieces" id="wn2" src="icons/white-knight.svg" />
+          </div>
+          <div class="light-square square" id="h1">
+            <div class="dark-letters letters">h</div>
+            <div class="dark-numbers numbers">1</div>
+            <img class="pieces" id="wr2" src="icons/white-rook.svg" />
+          </div>
+        </div>
+      </div>
+      <div class="extras">
+        <div class="piece-promotion">
+          <p class="piece-promotion-text"></p>
+        </div>
+        <div class="display-result">
+          <p class="result"></p>
+          <div class="draw">
+            <button class="accept-button">Accept</button>
+            <button class="decline-button">Decline</button>
+          </div>
+          <p class="who-wins"></p>
+        </div>
+        <div class="early-res-buttons">
+          <button class="resign-button" onclick="resign()">Resign</button>
+          <button class="draw-button" onclick="offerDraw()">Offer Draw</button>
+        </div>
+        <button onclick="rotateBoard()" class="flip-button">Flip Board</button>
+      </div>
+    </div>
+
+    <script src="board.js"></script>
+  </body>
+</html>
