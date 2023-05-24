@@ -744,6 +744,10 @@ function movePiece(element, idx) {
 
     if (removeDrawDeclined) {
         result.innerText = "";
+        drawOffered = false;
+        accept.style.display = "none";
+        decline.style.display = "none";
+        removeDrawDeclined = false;
     }
 
     // if the opposite player of the one who offered a draw is making a move
@@ -1366,6 +1370,12 @@ function offerDraw() {
             whoWins.innerText = "Draw";
             accept.style.display = "none";
             decline.style.display = "none";
+
+            // remove highlight on squares if a piece is currently selected
+            removeMovableSquares();
+            if (selectedPiece1) {
+                selectedPiece1.square.classList.remove("selected-piece");
+            }
             gameOver = true;
         });
 
@@ -1375,6 +1385,7 @@ function offerDraw() {
             decline.style.display = "none";
             canResign = true;
             gameOver = false;
+            drawOffered = false;
             removeDrawDeclined = true;
         });
     }
