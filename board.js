@@ -5,6 +5,7 @@ for (let i = 0; i < 8; i++) {
 }
 
 let squareList = document.querySelectorAll(".square");
+let squareListList = [...squareList];
 let pieceList = document.querySelectorAll(".square .pieces");
 let boardList = [];
 
@@ -148,58 +149,62 @@ let gameOver = false;
 // variable to keep track of a currently selected piece
 let selectedPiece1 = null;
 
-function highlightPiece(moveToElem) {
-   if (!gameOver) {
+// variable to check whether the same piece was clicked twice in a row
+// in this case instead of removing highlight onMouseDown, remove onMouseUp
+let removeOnMouseUp = false;
+
+function highlightPiece(element) {
+    if (!gameOver) {
        // if the current selected element equals the clicked element
-       if (selectedPiece1 == moveToElem) {
-           // add class to represent a piece being selected
-           moveToElem.square.classList.remove("selected-piece");
-           selectedPiece1 = null;
-       }
+       if (selectedPiece1 === element) {
+            // remove the selected-piece class
+            removeOnMouseUp = true;
+            selectedPiece1 = null;
+        }
 
        // if a current selected element exists and the clicked element is a piece
        // which has the same color as the currently selected element
-       else if (selectedPiece1 && isPiece(moveToElem) && getPlayerTurn() === moveToElem.piece.id[0]) {
-           selectedPiece1.square.classList.remove("selected-piece");
-           moveToElem.square.classList.add("selected-piece");
-           selectedPiece1 = moveToElem;
-       }
+       else if (selectedPiece1 && isPiece(element) && getPlayerTurn() === element.piece.id[0]) {
+            selectedPiece1.square.classList.remove("selected-piece");
+            element.square.classList.add("selected-piece");
+            selectedPiece1 = element;
+        }
       
        // if a current selected element exists and the clicked element is a piece which can be captured
-       else if (selectedPiece1 && isPiece(moveToElem) && movableSquaresList.includes(moveToElem)) {
-           selectedPiece1.square.classList.remove("selected-piece");
-           selectedPiece1 = null;
-       }
+       else if (selectedPiece1 && isPiece(element) && movableSquaresList.includes(element)) {
+            selectedPiece1.square.classList.remove("selected-piece");
+            selectedPiece1 = null;
+        }
 
        // if a current selected element exists and the clicked element is a piece
        // which can't be captured and has the opposite color as the currently selected element
-       else if (selectedPiece1 && isPiece(moveToElem) && getPlayerTurn() != moveToElem.piece.id[0]) {
-           selectedPiece1.square.classList.remove("selected-piece");
-           selectedPiece1 = null;
-       }
+       else if (selectedPiece1 && isPiece(element) && getPlayerTurn() != element.piece.id[0]) {
+            selectedPiece1.square.classList.remove("selected-piece");
+            selectedPiece1 = null;
+        }
       
        // if there is no currently selected element and the clicked element is a piece of the correct turn
-       else if (isPiece(moveToElem) && getPlayerTurn() === moveToElem.piece.id[0]) {
-           moveToElem.square.classList.add("selected-piece");
-           selectedPiece1 = moveToElem;
-       }
+       else if (isPiece(element) && getPlayerTurn() === element.piece.id[0]) {
+            element.square.classList.add("selected-piece");
+            selectedPiece1 = element;
+        }
 
        // if there is no currently selected element and the clicked element is a piece of the incorrect turn
-       else if (isPiece(moveToElem) && getPlayerTurn() != moveToElem.piece.id[0]) {
-           return;
-       }
+       else if (isPiece(element) && getPlayerTurn() != element.piece.id[0]) {
+            return;
+        }
 
        // if a currently selected element exists yet the clicked element has no piece on it
        else if (selectedPiece1) {
-           selectedPiece1.square.classList.remove("selected-piece");
-           selectedPiece1 = null;
-       }
-   }
+            selectedPiece1.square.classList.remove("selected-piece");
+            selectedPiece1 = null;
+        }
+    }
 }
 
 // show the movable squares of the piece clicked on
 boardList.forEach((value, index) =>
-value.square.addEventListener("click", () => movableSquares(value, index)));
+value.square.addEventListener("click", () => highlightMovableSquares(value, index)));
 
 // initialize a list to keep track of the legal moves for the piece
 let movableSquaresList = []
@@ -216,9 +221,9 @@ function removeMovableSquares() {
 }
 
 // add highlight to movable squares when a piece is clicked
-function movableSquares(element, idx) {
+function highlightMovableSquares(element, idx) {
    if (!gameOver) {
-       // if the square clicked on has a piece on it and whether it can be captured
+       // if the square clicked on has a piece on it and it can't be captured
        if (isPiece(element) && !movableSquaresList.includes(element)) {
            removeMovableSquares();
            const elementID = element.piece.id;
@@ -228,7 +233,8 @@ function movableSquares(element, idx) {
                selectedPiece2 = null;
            } else {
                // if the piece selected is the same piece as the currently selected piece
-               if (selectedPiece2 == element) {
+               if (selectedPiece2 === element) {
+                    movableMoves(element);
                    selectedPiece2 = null;
                } else {
                    movableMoves(element);
@@ -244,6 +250,125 @@ function movableSquares(element, idx) {
            selectedPiece2 = null;
        }
    }
+}
+
+// add draggability feature
+boardList.forEach((value, index) =>
+value.square.addEventListener("mousedown", (event) => drag(value, index, event)));
+
+function drag(element, elemIdx, event) {
+    event.preventDefault();
+
+    highlightPiece(element);
+    highlightMovableSquares(element, elemIdx);
+
+    const piece = element.piece;
+
+    // if it's a piece that has been clicked and the piece is of the correct turn
+    if (piece && getPlayerTurn() === piece.id[0]) {
+        let parentSquare = piece.parentNode;
+
+        parentSquare.removeChild(piece);
+        document.body.appendChild(piece);
+    
+        let newLeft = event.clientX - piece.offsetWidth / 2;
+        let newTop = event.clientY - piece.offsetHeight / 2;
+        let shiftX = event.clientX - parentSquare.getBoundingClientRect().left - piece.offsetWidth / 2;
+        let shiftY = event.clientY - parentSquare.getBoundingClientRect().top -  piece.offsetHeight / 2;
+    
+    
+        piece.style.left = (parentSquare.getBoundingClientRect().left + shiftX) + "px";
+        piece.style.top = (parentSquare.getBoundingClientRect().top + shiftY) + "px";
+
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+
+
+        function onMouseMove(event) {
+            newLeft = event.clientX - piece.offsetWidth / 2;
+            newTop = event.clientY - piece.offsetHeight / 2;
+      
+            piece.style.left = newLeft + "px";
+            piece.style.top = newTop + "px";
+        }
+
+        function onMouseUp(event) {
+            const pieceCenterX = piece.getBoundingClientRect().left + piece.offsetWidth / 2;
+            const pieceCenterY = piece.getBoundingClientRect().top + piece.offsetHeight / 2;
+
+            const squareObj = getSquareBelowDraggedPiece(pieceCenterX, pieceCenterY);
+            if (squareObj) {
+                // if it's dropped over a movable square
+                if (movableSquaresList.includes(squareObj)) {
+                    piece.style.left = "0px";
+                    piece.style.top = "0px";
+
+                    const moveToIdx = getIndexBySquare(squareObj.square);
+
+                    removeMovableSquares();
+                    parentSquare.classList.remove("selected-piece");
+                    parentSquare.appendChild(piece);
+
+                    movePiece(element, moveToIdx);
+                    
+                    parentSquare = squareObj.square;
+                } else if (squareObj === element) { // if it's dropped back over the original square
+                    // put piece back in center of square where it was originally
+                    parentSquare.appendChild(piece);
+                    piece.style.left = "0px";
+                    piece.style.top = "0px";
+
+                    // removes the highlights onmouseup
+                    if (removeOnMouseUp) {
+                        removeMovableSquares();
+                        parentSquare.classList.remove("selected-piece");
+                    }
+
+                } else { // if it's dropped over a square it can't move to that isn't the original square
+                    // put piece back in center of square where it was originally
+                    parentSquare.appendChild(piece);
+                    piece.style.left = "0px";
+                    piece.style.top = "0px";
+                    removeMovableSquares();
+                    parentSquare.classList.remove("selected-piece");
+
+                    // reset piece selection such that no pieces are currently selected
+                    selectedPiece1 = null;
+                    selectedPiece2 = null;
+                }
+            } else {
+                parentSquare.appendChild(piece);
+                removeMovableSquares();
+                parentSquare.classList.remove("selected-piece");
+
+                // put piece back in center of square where it was originally
+                piece.style.left = "0px";
+                piece.style.top = "0px";
+            }
+
+            removeOnMouseUp = false;
+
+            document.removeEventListener("mouseup", onMouseUp);
+            document.removeEventListener("mousemove", onMouseMove);
+        }
+
+    }
+
+}
+
+// function which returns the square element below the dragged piece. if no element, returns null
+function getSquareBelowDraggedPiece(xCoord, yCoord) {
+    for (const squareObj of boardList) {
+        squarePart = squareObj.square;
+        if (xCoord > squarePart.getBoundingClientRect().left &&
+        xCoord < squarePart.getBoundingClientRect().left + squarePart.offsetWidth &&
+        yCoord > squarePart.getBoundingClientRect().top &&
+        yCoord < squarePart.getBoundingClientRect().top + squarePart.offsetHeight) {
+            return squareObj;
+        }
+    }
+
+    return null;
 }
 
 // initialize variables to see if kings and rooks have moved for castling
@@ -677,6 +802,20 @@ function getNotationByIdx(index) {
   
    return { row_num, col_num };
 }
+
+function getElemByIdx(index) {
+    notation = getNotationByIdx(index);
+    const row = notation.row_num;
+    const col = notation.col_num;
+
+    return gameBoard[row][col];
+}
+ 
+ 
+function getIndexBySquare(square) {
+    return squareListList.indexOf(square);
+}
+ 
 
 // variable to keep track of where the king was in check
 let oldKingSquare = null;

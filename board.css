@@ -58,9 +58,10 @@
 }
 
 .pieces {
+    position: absolute;
     width: 76px;
     height: 76px;
-    padding: 4px;
+    padding: 2px;
     cursor: pointer;
 }
 
