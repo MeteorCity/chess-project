@@ -186,3 +186,8 @@
     border: none;
     cursor: pointer;
 }
+
+.random-button {
+    margin-top: 30px;
+    cursor: pointer;
+}

@@ -47,7 +47,7 @@ function isMovable(element1, element2) {
    }
 
    // if square moved to is piece
-   if (isPiece(element2) ) {
+   if (isPiece(element2)) {
        // if pieces are different colors and if when moved to it doesn't cause check
        if (element1.piece.id[0] != element2.piece.id[0] && checkFuture(element1, element2)) {
            return true
@@ -62,38 +62,66 @@ function isMovable(element1, element2) {
 // returns false if after piece moves it is check. returns true if after piece moves it isn't check.
 // element1 represents the current clicked element, element2 represents the square being checked
 function checkFuture(element1, element2) {
-   let element1Piece = element1.piece;
-   let element2Piece = element2.piece;
-   const moveToRowNum = getPieceNotation(element2).row;
-   const moveToColNum = getPieceNotation(element2).col;
-   const moveAwayRowNum = getPieceNotation(element1).row;
-   const moveAwayColNum = getPieceNotation(element1).col;
-  
-   // make the move on the 2d array board
-   gameBoard[moveToRowNum][moveToColNum].piece = element1.piece;
-   gameBoard[moveAwayRowNum][moveAwayColNum].piece = null;
+    let element1Piece = element1.piece;
+    let element2Piece = element2.piece;
+    const moveToRowNum = getPieceNotation(element2).row;
+    const moveToColNum = getPieceNotation(element2).col;
+    const moveAwayRowNum = getPieceNotation(element1).row;
+    const moveAwayColNum = getPieceNotation(element1).col;
+    const turn = getPlayerTurn();
+    let enPassantCaptured = null;
+    
+    // make the move on the 2d array board
+    gameBoard[moveToRowNum][moveToColNum].piece = element1.piece;
+    gameBoard[moveAwayRowNum][moveAwayColNum].piece = null;
 
-   // update the attacked squares for the new board
-   updateAttackedSquares();
+    if (element2 === enPassant) {
+        if (turn === "w") {
+            enPassantCaptured = gameBoard[moveToRowNum + 1][moveToColNum].piece
+            gameBoard[moveToRowNum + 1][moveToColNum].piece = null;
+        } else {
+            enPassantCaptured = gameBoard[moveToRowNum - 1][moveToColNum].piece
+            gameBoard[moveToRowNum - 1][moveToColNum].piece = null;
+        }
+    }
 
-   if (inCheck()) {
-       // move pieces back to original positions
-       gameBoard[moveToRowNum][moveToColNum].piece = element2Piece;
-       gameBoard[moveAwayRowNum][moveAwayColNum].piece = element1Piece;
+    // update the attacked squares for the new board
+    updateAttackedSquares();
 
-       // bring the attackedSquares list back to what it was originally
-       updateAttackedSquares();
+    if (inCheck()) {
+        // move pieces back to original positions
+        gameBoard[moveToRowNum][moveToColNum].piece = element2Piece;
+        gameBoard[moveAwayRowNum][moveAwayColNum].piece = element1Piece;
 
-       // if the king was in check after moving the piece return false
-       return false;
-   }
+        if (element2 === enPassant) {
+            if (turn === "w") {
+                gameBoard[moveToRowNum + 1][moveToColNum].piece = enPassantCaptured;
+            } else {
+                gameBoard[moveToRowNum - 1][moveToColNum].piece = enPassantCaptured;
+            }
+        }
 
-   gameBoard[moveToRowNum][moveToColNum].piece = element2Piece;
-   gameBoard[moveAwayRowNum][moveAwayColNum].piece = element1Piece;
+        // bring the attackedSquares list back to what it was originally
+        updateAttackedSquares();
 
-   updateAttackedSquares();
+        // if the king was in check after moving the piece return false
+        return false;
+    }
 
-   return true;
+    gameBoard[moveToRowNum][moveToColNum].piece = element2Piece;
+    gameBoard[moveAwayRowNum][moveAwayColNum].piece = element1Piece;
+
+    if (element2 === enPassant) {
+        if (turn === "w") {
+            gameBoard[moveToRowNum + 1][moveToColNum].piece = enPassantCaptured;
+        } else {
+            gameBoard[moveToRowNum - 1][moveToColNum].piece = enPassantCaptured;
+        }
+    }
+
+    updateAttackedSquares();
+
+    return true;
 }
 
 // gets the board notation based on the given element
@@ -259,101 +287,110 @@ value.square.addEventListener("mousedown", (event) => drag(value, index, event))
 function drag(element, elemIdx, event) {
     event.preventDefault();
 
-    highlightPiece(element);
-    highlightMovableSquares(element, elemIdx);
+    if (!gameOver) {
+        highlightPiece(element);
+        highlightMovableSquares(element, elemIdx);
 
-    const piece = element.piece;
+        const piece = element.piece;
 
-    // if it's a piece that has been clicked and the piece is of the correct turn
-    if (piece && getPlayerTurn() === piece.id[0]) {
-        let parentSquare = piece.parentNode;
+        // if it's a piece that has been clicked and the piece is of the correct turn
+        if (piece && getPlayerTurn() === piece.id[0]) {
+            let parentSquare = piece.parentNode;
 
-        parentSquare.removeChild(piece);
-        document.body.appendChild(piece);
-    
-        let newLeft = event.clientX - piece.offsetWidth / 2;
-        let newTop = event.clientY - piece.offsetHeight / 2;
-        let shiftX = event.clientX - parentSquare.getBoundingClientRect().left - piece.offsetWidth / 2;
-        let shiftY = event.clientY - parentSquare.getBoundingClientRect().top -  piece.offsetHeight / 2;
-    
-    
-        piece.style.left = (parentSquare.getBoundingClientRect().left + shiftX) + "px";
-        piece.style.top = (parentSquare.getBoundingClientRect().top + shiftY) + "px";
+            parentSquare.removeChild(piece);
+            document.body.appendChild(piece);
 
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
+            if (isBoardRotated) {
+                piece.style.transform = "rotate(0deg)";
+            }
+        
+            let newLeft = event.clientX - piece.offsetWidth / 2;
+            let newTop = event.clientY - piece.offsetHeight / 2;
+            let shiftX = event.clientX - parentSquare.getBoundingClientRect().left - piece.offsetWidth / 2;
+            let shiftY = event.clientY - parentSquare.getBoundingClientRect().top -  piece.offsetHeight / 2;
+        
+        
+            piece.style.left = (parentSquare.getBoundingClientRect().left + shiftX) + "px";
+            piece.style.top = (parentSquare.getBoundingClientRect().top + shiftY) + "px";
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
 
 
-        function onMouseMove(event) {
-            newLeft = event.clientX - piece.offsetWidth / 2;
-            newTop = event.clientY - piece.offsetHeight / 2;
-      
-            piece.style.left = newLeft + "px";
-            piece.style.top = newTop + "px";
-        }
-
-        function onMouseUp(event) {
-            const pieceCenterX = piece.getBoundingClientRect().left + piece.offsetWidth / 2;
-            const pieceCenterY = piece.getBoundingClientRect().top + piece.offsetHeight / 2;
-
-            const squareObj = getSquareBelowDraggedPiece(pieceCenterX, pieceCenterY);
-            if (squareObj) {
-                // if it's dropped over a movable square
-                if (movableSquaresList.includes(squareObj)) {
-                    piece.style.left = "0px";
-                    piece.style.top = "0px";
-
-                    const moveToIdx = getIndexBySquare(squareObj.square);
-
-                    removeMovableSquares();
-                    parentSquare.classList.remove("selected-piece");
-                    parentSquare.appendChild(piece);
-
-                    movePiece(element, moveToIdx);
-                    
-                    parentSquare = squareObj.square;
-                } else if (squareObj === element) { // if it's dropped back over the original square
-                    // put piece back in center of square where it was originally
-                    parentSquare.appendChild(piece);
-                    piece.style.left = "0px";
-                    piece.style.top = "0px";
-
-                    // removes the highlights onmouseup
-                    if (removeOnMouseUp) {
-                        removeMovableSquares();
-                        parentSquare.classList.remove("selected-piece");
-                    }
-
-                } else { // if it's dropped over a square it can't move to that isn't the original square
-                    // put piece back in center of square where it was originally
-                    parentSquare.appendChild(piece);
-                    piece.style.left = "0px";
-                    piece.style.top = "0px";
-                    removeMovableSquares();
-                    parentSquare.classList.remove("selected-piece");
-
-                    // reset piece selection such that no pieces are currently selected
-                    selectedPiece1 = null;
-                    selectedPiece2 = null;
-                }
-            } else {
-                parentSquare.appendChild(piece);
-                removeMovableSquares();
-                parentSquare.classList.remove("selected-piece");
-
-                // put piece back in center of square where it was originally
-                piece.style.left = "0px";
-                piece.style.top = "0px";
+            function onMouseMove(event) {
+                newLeft = event.clientX - piece.offsetWidth / 2;
+                newTop = event.clientY - piece.offsetHeight / 2;
+        
+                piece.style.left = newLeft + "px";
+                piece.style.top = newTop + "px";
             }
 
-            removeOnMouseUp = false;
+            function onMouseUp(event) {
+                const pieceCenterX = piece.getBoundingClientRect().left + piece.offsetWidth / 2;
+                const pieceCenterY = piece.getBoundingClientRect().top + piece.offsetHeight / 2;
 
-            document.removeEventListener("mouseup", onMouseUp);
-            document.removeEventListener("mousemove", onMouseMove);
+                const squareObj = getSquareBelowDraggedPiece(pieceCenterX, pieceCenterY);
+                if (squareObj) {
+                    // if it's dropped over a movable square
+                    if (movableSquaresList.includes(squareObj)) {
+                        piece.style.left = "0px";
+                        piece.style.top = "0px";
+
+                        const moveToIdx = getIndexBySquare(squareObj.square);
+
+                        removeMovableSquares();
+                        parentSquare.classList.remove("selected-piece");
+                        parentSquare.appendChild(piece);
+
+                        movePiece(element, moveToIdx);
+                        
+                        parentSquare = squareObj.square;
+                    } else if (squareObj === element) { // if it's dropped back over the original square
+                        // put piece back in center of square where it was originally
+                        parentSquare.appendChild(piece);
+                        piece.style.left = "0px";
+                        piece.style.top = "0px";
+
+                        // removes the highlights onmouseup
+                        if (removeOnMouseUp) {
+                            removeMovableSquares();
+                            parentSquare.classList.remove("selected-piece");
+                        }
+
+                    } else { // if it's dropped over a square it can't move to that isn't the original square
+                        // put piece back in center of square where it was originally
+                        parentSquare.appendChild(piece);
+                        piece.style.left = "0px";
+                        piece.style.top = "0px";
+                        removeMovableSquares();
+                        parentSquare.classList.remove("selected-piece");
+
+                        // reset piece selection such that no pieces are currently selected
+                        selectedPiece1 = null;
+                        selectedPiece2 = null;
+                    }
+                } else {
+                    parentSquare.appendChild(piece);
+                    removeMovableSquares();
+                    parentSquare.classList.remove("selected-piece");
+
+                    // put piece back in center of square where it was originally
+                    piece.style.left = "0px";
+                    piece.style.top = "0px";
+                }
+
+                if (isBoardRotated) {
+                    piece.style.transform = "rotate(180deg)";
+                }
+
+                removeOnMouseUp = false;
+
+                document.removeEventListener("mouseup", onMouseUp);
+                document.removeEventListener("mousemove", onMouseMove);
+            }
+
         }
-
     }
-
 }
 
 // function which returns the square element below the dragged piece. if no element, returns null
@@ -711,8 +748,8 @@ function getEnPassantMove(element) {
     // move since there is only one possible en passant move
     let move = null;
 
-    // lastPieceMoved starts as null so check if a piece has moved yet
-    if (lastPieceMoved) {
+     // check if piece is pawn and lastPieceMoved starts as null so check if a piece has moved yet
+    if (element.piece.id[1] === "p" && lastPieceMoved) {
         const lastPieceColor = lastPieceMoved.piece.id[0];
         const lastPieceNotation = getPieceNotation(lastPieceMoved);
         const lastPieceRow = lastPieceNotation.row;
@@ -790,8 +827,10 @@ function movableMoves(element) {
     const enPassantMove = getEnPassantMove(element);
 
     if (enPassantMove) {
-        enPassantMove.square.classList.add("movable-square");
-        movableSquaresList.push(enPassantMove);
+        if (isMovable(element, enPassantMove)) {
+            enPassantMove.square.classList.add("movable-square");
+            movableSquaresList.push(enPassantMove);
+        }
     }
 }
 
@@ -811,11 +850,9 @@ function getElemByIdx(index) {
     return gameBoard[row][col];
 }
  
- 
 function getIndexBySquare(square) {
     return squareListList.indexOf(square);
-}
- 
+} 
 
 // variable to keep track of where the king was in check
 let oldKingSquare = null;
@@ -846,6 +883,9 @@ let removeDrawDeclined = false;
 // variable to check if the board has been rotated or not
 let isBoardRotated = false;
 
+// variable to check whether the button play random moves has been clicked
+let clickedRandom = false;
+
 // variable to keep track of the board states for three move repetition
 // start by initializing the starting position as a key and giving it a value of one occurence
 const initialBoardState = JSON.stringify(gameBoard)
@@ -856,16 +896,16 @@ let boardStates = {
 
 // function which moves the pieces from one spot to another
 function movePiece(element, idx) {
-   const moveToRowNum = getNotationByIdx(idx).row_num;
-   const moveToColNum = getNotationByIdx(idx).col_num;
-   const moveAwayRowNum = getPieceNotation(element).row;
-   const moveAwayColNum = getPieceNotation(element).col;
-   const colDifference = moveAwayColNum - moveToColNum;
-   const rowDifference = moveAwayRowNum - moveToRowNum;
-   const moveToSquare = gameBoard[moveToRowNum][moveToColNum];
-   const moveAwaySquare = gameBoard[moveAwayRowNum][moveAwayColNum];
-   const pieceID = element.piece.id
-   const turn = getPlayerTurn();
+    const moveToRowNum = getNotationByIdx(idx).row_num;
+    const moveToColNum = getNotationByIdx(idx).col_num;
+    const moveAwayRowNum = getPieceNotation(element).row;
+    const moveAwayColNum = getPieceNotation(element).col;
+    const colDifference = moveAwayColNum - moveToColNum;
+    const rowDifference = moveAwayRowNum - moveToRowNum;
+    const moveToSquare = gameBoard[moveToRowNum][moveToColNum];
+    const moveAwaySquare = gameBoard[moveAwayRowNum][moveAwayColNum];
+    const pieceID = element.piece.id
+    const turn = getPlayerTurn();
 
     if (pieceID === "wr1") {
         rookw1HasMoved = true;
@@ -954,9 +994,6 @@ function movePiece(element, idx) {
 
     // check if pawn is promoting
     if ((pieceID.substring(0, 2) === "wp" && moveAwayRowNum === 1) || (pieceID.substring(0, 2) === "bp" && moveAwayRowNum === 6)) {
-        const whichPiece = document.querySelector(".piece-promotion-text");
-        whichPiece.innerText = "Which piece do you want to promote to?";
-
         const promotionOptions = document.querySelectorAll(".promotion-option")
         for (const option of promotionOptions) {
             option.style.display = "inline-block";
@@ -981,6 +1018,10 @@ function movePiece(element, idx) {
   
    // check for stuff
    updateAndCheck();
+
+    if (getPlayerTurn() === "b" && clickedRandom && !gameOver) {
+        playRandomMove();
+    }
 }
 
 // variable to keep track of the currently attacked squares. each element will be an object mapping
@@ -1162,177 +1203,269 @@ function initializePromotion(idx) {
         playerTurn = "black"
     }
 
-    const promotionContainer = document.querySelector(".piece-promotion");
-
-    // add text to the paragraph element
-    const whichPiece = document.querySelector(".piece-promotion-text");
-    whichPiece.innerText = "Which piece do you want to promote to?";
-
-    // create all the buttons
-    const queenButton = document.createElement("button");
-    queenButton.innerText = "Queen";
-    queenButton.className = "promotion-buttons";
-
-    const rookButton = document.createElement("button");
-    rookButton.innerText = "Rook";
-    rookButton.className = "promotion-buttons";
-
-    const bishopButton = document.createElement("button");
-    bishopButton.innerText = "Bishop";
-    bishopButton.className = "promotion-buttons";
-
-    const knightButton = document.createElement("button");
-    knightButton.innerText = "Knight";
-    knightButton.className = "promotion-buttons";
-
-    // get all the buttons in an array
-    const promotionButtons = [queenButton, rookButton, bishopButton, knightButton];
-
-    // add the buttons as a child element of the piece-promotion div
-    promotionButtons.forEach(value => {
-        promotionContainer.appendChild(value);
-    });
-
-    gameOver = true;
-
-    // add onlick attribute
-    queenButton.addEventListener("click", function makePromotionQueen() {
-        // find which ID needs to be added to the promoted piece
-        const firstPart = `${turn}q`;
-        const counterVariableName = `${firstPart}Counter`;
-        const addPieceID = `${firstPart}${counters[counterVariableName]}`;
-
-        // increment the counter of the piece whose ID was just added
-        counters[counterVariableName] += 1;
-
-        // remove the pawn that's on the promotion square
-
+    if (turn === "b" && clickedRandom) {
         promotionSquare.square.removeChild(promotionSquare.piece);
+        const randomChoice = Math.floor(Math.random() * 4);
 
-        // create an image of the new piece to be added
-        const queenImage = new Image();
-        queenImage.id = addPieceID
-        queenImage.src = `icons/${playerTurn}-queen.svg`;
-        queenImage.className = ("pieces");
+        if (randomChoice === 0) {
+            const addPieceID = "bqCounter";
 
-        if (isBoardRotated) {
-            queenImage.style.transform = "rotate(180deg)";
+            // increment the counter of the piece whose ID was just added
+            counters["bqCounter"] += 1;
+
+            const queenImage = new Image();
+            queenImage.id = addPieceID
+            queenImage.src = `icons/${playerTurn}-queen.svg`;
+            queenImage.className = ("pieces");
+
+            if (isBoardRotated) {
+                queenImage.style.transform = "rotate(180deg)";
+            }
+
+            // add the image to the html file
+            promotionSquare.square.appendChild(queenImage);
+
+            // add the piece to the gameBoard
+            promotionSquare.piece = queenImage;
+        } else if (randomChoice === 1) {
+            const addPieceID = "brCounter";
+
+            // increment the counter of the piece whose ID was just added
+            counters["brCounter"] += 1;
+
+            const rookImage = new Image();
+            rookImage.id = addPieceID
+            rookImage.src = `icons/${playerTurn}-rook.svg`;
+            rookImage.className = ("pieces");
+
+            if (isBoardRotated) {
+                rookImage.style.transform = "rotate(180deg)";
+            }
+
+            promotionSquare.square.appendChild(rookImage);
+            promotionSquare.piece = rookImage;
+        } else if (randomChoice === 2) {
+            const addPieceID = "bbCounter";
+
+            // increment the counter of the piece whose ID was just added
+            counters["bbCounter"] += 1;
+
+            const bishopImage = new Image();
+            bishopImage.id = addPieceID
+            bishopImage.src = `icons/${playerTurn}-bishop.svg`;
+            bishopImage.className = ("pieces");
+
+            if (isBoardRotated) {
+                bishopImage.style.transform = "rotate(180deg)";
+            }
+
+            promotionSquare.square.appendChild(bishopImage);
+            promotionSquare.piece = bishopImage;
+        } else {
+            const addPieceID = "bnCounter";
+
+            // increment the counter of the piece whose ID was just added
+            counters["bnCounter"] += 1;
+
+            const knightImage = new Image();
+            knightImage.id = addPieceID
+            knightImage.src = `icons/${playerTurn}-knight.svg`;
+            knightImage.className = ("pieces");
+
+            if (isBoardRotated) {
+                knightImage.style.transform = "rotate(180deg)";
+            }
+
+            promotionSquare.square.appendChild(knightImage);
+            promotionSquare.piece = knightImage;
         }
 
-        // add the image to the html file
-        promotionSquare.square.appendChild(queenImage);
+        return;
+    } else {
+        const promotionContainer = document.querySelector(".piece-promotion");
 
-        // add the piece to the gameBoard
-        promotionSquare.piece = queenImage;
-
-        // hide the paragraph
-        whichPiece.innerHTML = "";
-
-        // remove the buttons
-        promotionButtons.forEach(value => {
-            promotionContainer.removeChild(value);
-        });
-
-        gameOver = false;
-
-        updateAndCheck();
-    });
+        // add text to the paragraph element
+        const whichPiece = document.querySelector(".piece-promotion-text");
+        whichPiece.innerText = "Which piece do you want to promote to?";
     
-    rookButton.addEventListener("click", function makePromotionRook() {
-        const firstPart = `${turn}r`;
-        const counterVariableName = `${firstPart}Counter`;
-        const addPieceID = `${firstPart}${counters[counterVariableName]}`;
-
-        counters[counterVariableName] += 1;
-
-        promotionSquare.square.removeChild(promotionSquare.piece);
-        const rookImage = new Image();
-        rookImage.id = addPieceID
-        rookImage.src = `icons/${playerTurn}-rook.svg`;
-        rookImage.className = ("pieces");
-
-        if (isBoardRotated) {
-            rookImage.style.transform = "rotate(180deg)";
-        }
-
-        promotionSquare.square.appendChild(rookImage);
-
-        promotionSquare.piece = rookImage;
-
-        whichPiece.innerHTML = "";
-
+        // create all the buttons
+        const queenButton = document.createElement("button");
+        queenButton.innerText = "Queen";
+        queenButton.className = "promotion-buttons";
+    
+        const rookButton = document.createElement("button");
+        rookButton.innerText = "Rook";
+        rookButton.className = "promotion-buttons";
+    
+        const bishopButton = document.createElement("button");
+        bishopButton.innerText = "Bishop";
+        bishopButton.className = "promotion-buttons";
+    
+        const knightButton = document.createElement("button");
+        knightButton.innerText = "Knight";
+        knightButton.className = "promotion-buttons";
+    
+        // get all the buttons in an array
+        const promotionButtons = [queenButton, rookButton, bishopButton, knightButton];
+    
+        // add the buttons as a child element of the piece-promotion div
         promotionButtons.forEach(value => {
-            promotionContainer.removeChild(value);
+            promotionContainer.appendChild(value);
         });
-
-        gameOver = false;
-
-        updateAndCheck();
-    });
-
-    bishopButton.addEventListener("click", function makePromotionBishop() {
-        const firstPart = `${turn}b`;
-        const counterVariableName = `${firstPart}Counter`;
-        const addPieceID = `${firstPart}${counters[counterVariableName]}`;
-
-        counters[counterVariableName] += 1;
-
-        promotionSquare.square.removeChild(promotionSquare.piece);
-        const bishopImage = new Image();
-        bishopImage.id = addPieceID;
-        bishopImage.src = `icons/${playerTurn}-bishop.svg`;
-        bishopImage.className = ("pieces");
-
-        if (isBoardRotated) {
-            bishopImage.style.transform = "rotate(180deg)";
-        }
-
-        promotionSquare.square.appendChild(bishopImage);
-
-        promotionSquare.piece = bishopImage;
-
-        whichPiece.innerHTML = "";
-
-        promotionButtons.forEach(value => {
-            promotionContainer.removeChild(value);
+    
+        gameOver = true;
+    
+        // add onlick attribute
+        queenButton.addEventListener("click", function makePromotionQueen() {
+            // find which ID needs to be added to the promoted piece
+            const firstPart = `${turn}q`;
+            const counterVariableName = `${firstPart}Counter`;
+            const addPieceID = `${firstPart}${counters[counterVariableName]}`;
+    
+            // increment the counter of the piece whose ID was just added
+            counters[counterVariableName] += 1;
+    
+            // remove the pawn that's on the promotion square
+    
+            promotionSquare.square.removeChild(promotionSquare.piece);
+    
+            // create an image of the new piece to be added
+            const queenImage = new Image();
+            queenImage.id = addPieceID
+            queenImage.src = `icons/${playerTurn}-queen.svg`;
+            queenImage.className = ("pieces");
+    
+            if (isBoardRotated) {
+                queenImage.style.transform = "rotate(180deg)";
+            }
+    
+            // add the image to the html file
+            promotionSquare.square.appendChild(queenImage);
+    
+            // add the piece to the gameBoard
+            promotionSquare.piece = queenImage;
+    
+            // hide the paragraph
+            whichPiece.innerHTML = "";
+    
+            // remove the buttons
+            promotionButtons.forEach(value => {
+                promotionContainer.removeChild(value);
+            });
+    
+            gameOver = false;
+            if (clickedRandom) {
+                playRandomMove();
+            }
+    
+            updateAndCheck();
         });
-
-        gameOver = false;
-
-        updateAndCheck();
-    });
-
-    knightButton.addEventListener("click", function makePromotionKnight() {
-        const firstPart = `${turn}n`;
-        const counterVariableName = `${firstPart}Counter`;
-        const addPieceID = `${firstPart}${counters[counterVariableName]}`;
-
-        counters[counterVariableName] += 1;
-
-        promotionSquare.square.removeChild(promotionSquare.piece);
-        const knightImage = new Image();
-        knightImage.id = addPieceID
-        knightImage.src = `icons/${playerTurn}-knight.svg`;
-        knightImage.className = ("pieces");
-
-        if (isBoardRotated) {
-            knightImage.style.transform = "rotate(180deg)"
-        }
-
-        promotionSquare.square.appendChild(knightImage);
         
-        promotionSquare.piece = knightImage;
-
-        whichPiece.innerHTML = "";
-
-        promotionButtons.forEach(value => {
-            promotionContainer.removeChild(value);
+        rookButton.addEventListener("click", function makePromotionRook() {
+            const firstPart = `${turn}r`;
+            const counterVariableName = `${firstPart}Counter`;
+            const addPieceID = `${firstPart}${counters[counterVariableName]}`;
+    
+            counters[counterVariableName] += 1;
+    
+            promotionSquare.square.removeChild(promotionSquare.piece);
+            const rookImage = new Image();
+            rookImage.id = addPieceID
+            rookImage.src = `icons/${playerTurn}-rook.svg`;
+            rookImage.className = ("pieces");
+    
+            if (isBoardRotated) {
+                rookImage.style.transform = "rotate(180deg)";
+            }
+    
+            promotionSquare.square.appendChild(rookImage);
+    
+            promotionSquare.piece = rookImage;
+    
+            whichPiece.innerHTML = "";
+    
+            promotionButtons.forEach(value => {
+                promotionContainer.removeChild(value);
+            });
+    
+            gameOver = false;
+            if (clickedRandom) {
+                playRandomMove();
+            }
+    
+            updateAndCheck();
         });
-
-        gameOver = false;
-
-        updateAndCheck();
-    });
+    
+        bishopButton.addEventListener("click", function makePromotionBishop() {
+            const firstPart = `${turn}b`;
+            const counterVariableName = `${firstPart}Counter`;
+            const addPieceID = `${firstPart}${counters[counterVariableName]}`;
+    
+            counters[counterVariableName] += 1;
+    
+            promotionSquare.square.removeChild(promotionSquare.piece);
+            const bishopImage = new Image();
+            bishopImage.id = addPieceID;
+            bishopImage.src = `icons/${playerTurn}-bishop.svg`;
+            bishopImage.className = ("pieces");
+    
+            if (isBoardRotated) {
+                bishopImage.style.transform = "rotate(180deg)";
+            }
+    
+            promotionSquare.square.appendChild(bishopImage);
+    
+            promotionSquare.piece = bishopImage;
+    
+            whichPiece.innerHTML = "";
+    
+            promotionButtons.forEach(value => {
+                promotionContainer.removeChild(value);
+            });
+    
+            gameOver = false;
+            if (clickedRandom) {
+                playRandomMove();
+            }
+    
+            updateAndCheck();
+        });
+    
+        knightButton.addEventListener("click", function makePromotionKnight() {
+            const firstPart = `${turn}n`;
+            const counterVariableName = `${firstPart}Counter`;
+            const addPieceID = `${firstPart}${counters[counterVariableName]}`;
+    
+            counters[counterVariableName] += 1;
+    
+            promotionSquare.square.removeChild(promotionSquare.piece);
+            const knightImage = new Image();
+            knightImage.id = addPieceID
+            knightImage.src = `icons/${playerTurn}-knight.svg`;
+            knightImage.className = ("pieces");
+    
+            if (isBoardRotated) {
+                knightImage.style.transform = "rotate(180deg)"
+            }
+    
+            promotionSquare.square.appendChild(knightImage);
+            
+            promotionSquare.piece = knightImage;
+    
+            whichPiece.innerHTML = "";
+    
+            promotionButtons.forEach(value => {
+                promotionContainer.removeChild(value);
+            });
+    
+            gameOver = false;
+            if (clickedRandom) {
+                playRandomMove();
+            }
+    
+            updateAndCheck();
+        });
+    }
 }
 
 // updates attacked squares and checks if the king is in checkmate, stalemate, or check
@@ -1489,7 +1622,7 @@ function resign() {
 
 // finish function later
 function offerDraw() {
-    if (!gameOver && !drawOffered) {
+    if (!gameOver && !drawOffered && !clickedRandom) {
         canResign = false;
         drawOffered = true;
         const turn = getPlayerTurn();
@@ -1564,6 +1697,44 @@ function rotateBoard() {
         letters.forEach(value => value.style.transform = "rotate(180deg)");
         isBoardRotated = true;
     }
+}
+
+function playRandomMove() {
+    if (getPlayerTurn() === "b") {
+        const possibleMoves = getAllPossibleMoves();
+        const outerRandomNum = Math.floor(Math.random() * possibleMoves.length);
+        const innerRandomNum =  Math.floor(Math.random() * possibleMoves[outerRandomNum].movable.length);
+        const randomMoveElem = possibleMoves[outerRandomNum].movable[innerRandomNum];
+        const moveToIdx = getIndexBySquare(randomMoveElem.square);
+    
+        movePiece(possibleMoves[outerRandomNum].elem, moveToIdx);
+    }
+}
+
+// returns a list of all of black's possible moves
+function getAllPossibleMoves() {
+    let possibleMoves = [];
+
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const element = gameBoard[row][col]
+            // if there's a piece and that piece is black
+            if (element.piece && element.piece.id[0] === "b") {
+                movableMoves(element);
+                // if the piece can move
+                if (movableSquaresList.length != 0) {
+                    possibleMoves.push({elem: element, movable: movableSquaresList});
+                }
+                removeMovableSquares();
+            }
+        }
+    }
+
+    return possibleMoves;
+}
+
+function flipRandom() {
+    clickedRandom = !clickedRandom;
 }
 
 
